@@ -1,6 +1,17 @@
 ### 机器翻译：西班牙语转英语
 **Model** : 
-> seq2seq-注意  
+> seq2seq-attention 
+
+>> encoder  
+>>> embeding  
+>>> gru
+
+>>decoder   
+>>> embeding  
+>>> attention  
+>>> gru  
+>>> fc  
+
 
 1. loss 变化 
 ![epochs](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task4_seq2seq/imgs/epoch_loss.png)
