@@ -126,6 +126,28 @@ def tokenizer(split_seq_data,vocab_size =3000,lang_tokenizer=None):
     #   padding = 'post' 在后面做padding
     return tensor,lang_tokenizer
 
+def tokenizer_for_category(label_list):
+    '''
+    用于分类任务 category one_hot
+    会多0列，全零，因为tokenizer index 从1开始     
+    '''
+    label_tokenizer = Tokenizer(filters='')#必须不过滤任何字符
+    label_tokenizer.fit_on_texts(label_list)
+    text = label_tokenizer.texts_to_matrix(label_list)
+    print('判断tokenizer 是否和原来一致')   
+    len(label_tokenizer.word_counts)==len(set(label_list))
+    # 验证text 是否可用 由于index 从1 开始 因此会 matrix 会多一列
+    print('判断one-hot 后tokenizer 隐射关系是否正确')
+    indlist = np.argmax(text, 1)        
+    a = [label_tokenizer.index_word[x] for x in indlist]
+    if a == label_list:
+        print('一致')
+    else:
+        print('不一致，手动验证')
+    return text,label_tokenizer
+
+label_tensor,label_tokenizer = tokenizer_for_category(label_list)
+
 
 # =============================================================================
 # 2 添加标记
@@ -178,16 +200,34 @@ def filter_by_max_length(x_seq,y_seq,max_len):
 input_train,input_eval,output_train,output_eval = train_test_split(
     input_tensor,output_tensor,test_size = 0.2) 
    
+
 def get_batch(inp_array,tar_array,batch_size):
     '''
     按 batch 分割
     '''
-    num = int(math.ceil(len(tmp_x)/batch_size)*batch_size)
-    tmp_x = tmp_x[:num]
-    tmp_y = tmp_y[:num]
-    dataset = tf.data.Dataset.from_tensor_slices((tmp_x, tmp_y))
+    batchs = math.ceil(len(inp_array)/batch_size)-1
+    num = int(batchs*batch_size)
+    inp_array = inp_array[:num]
+    tar_array = tar_array[:num]
+    dataset = tf.data.Dataset.from_tensor_slices((inp_array, tar_array))
     dataset = dataset.batch(batch_size)
-    return dataset
+    print('batchs : {}'.format(batchs))
+    #   校验是否每个dataset batch 都与config 一致
+    tag = 0
+    ind = 0
+    for i in dataset:
+        ind+=1
+        inp,tar = i
+        if inp.shape[0]<config['batch_size']:
+            tag+=1
+            print('batch_size not equal in ind: ',ind)    
+    print('not equal batch_size number : ',tag)
+    return dataset,batchs
+
+train_set,batchs = get_batch(input_train,target_train,config['batch_size'])
+
+
+
 
 def shuffle_all(shuffle_data):
     '''模型数据 shuffle 多任务的要一起shuffle

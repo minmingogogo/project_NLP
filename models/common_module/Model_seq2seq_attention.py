@@ -28,6 +28,7 @@ class Seq2Seq_Attention(K.Model):
         self.decoder = Decoder(config)
         self.attention = Attention(config)
     def call(self,inp,tar,loss_function):
+        ''' 去掉loss部分 不要放到模型里算'''
         #   初始化状态变量
         encoding_hidden = self.encoder.initialize_hidden_state()
         encoding_outputs,encoding_hidden = self.encoder(inp,encoding_hidden)
@@ -69,7 +70,6 @@ class Seq2Seq_Attention(K.Model):
     
     def evaluate(self,inp,output_tokenizer):
         ''' 单条输入
-        图模式
         '''
         results = ''
         attention_matrix = np.zeros((self.config['tar_max_len'],
@@ -185,74 +185,6 @@ if __name__ == '__main__':
                             ).reshape((-1,config['tar_max_len']))            
             
          
-
-
-# encoding_hidden = encoder.initialize_hidden_state()
-# encoding_outputs,encoding_hidden = encoder(inp,encoding_hidden)
-# decoding_hidden = encoding_hidden
-# # decoding_output,decoding_hidden,_ = self.decoder(tar,encoding_outputs,decoding_hidden)      
-# #   tar:target
-# loss = 0
-# for t in range(0,tar.shape[1]-1):
-#     t = 0
-#     ''' token逐个预测 ，需要逐个输入计算 loss'''
-#     decoding_input = tf.expand_dims(tar[:,t],1)
-#     # decoding_output.shape(B,E)
-#     # decoding_hidden.shape(B,U)
-#     # attention_weight 没用到 用_ 替代
-#     print(decoding_input.shape,encoding_outputs.shape,decoding_hidden.shape)
-#     decoding_output,decoding_hidden,_ = decoder(
-#         decoding_input,encoding_outputs,decoding_hidden)
-#     print(decoding_output.shape,decoding_hidden.shape,)
-    
-#     loss += loss_function(tar[:,t+1], decoding_output)     
-#     weight = decoder.embedding.get_weights()[0]
-#     tar_ids = tar[:,t+1]
-#     y_true = weight[tar_ids]
-#     y_pre = decoding_output 
-    
-    
-#     print(y_true.shape,y_pre.shape,)
-#     loss += loss_function(y_true, y_pre)        
-#     batch_loss = loss/int(tar.shape[0])
-#     predicted_id = tf.argmax(predictions[0].numpy())
-
-
-#     config = {
-#         # 关联参数配置
-#         #   embed_size 与 attention_units ，tar_embed_size 三个相等
-#         'embed_size':256,# 需要等于 attention_units 残差连接 
-#         'tar_embed_size':256, # 
-#         #   rnn_layer
-#         'decoding_units':256,
-#         'encoding_units':256,# 需要等于 tar_embed_size  才能拼接  
-#         #   attention_layer        
-#         'attention_units':256,# 需要等于 embed_size 残差连接 
-#         'num_heads':8,  #   num_heads 能被embed_size 整除
-      
-#         # 无关联参数配置
-#         'epoch':10,
-#         'batch_size':16,
-#         # embedding_layer
-#         'vocab_size':3196,
-#         'max_len':40,
-#         'tar_max_len':20,
-#         'tar_vocab_size':500,   
-          
-#         # encoder_decoder_layer
-#         'num_decoder_layer':2,
-#         'num_encoder_layer':3,
-#         'ffn_units':64,
-#         'activation':'relu',
-#         'dropout':0.1,
-#         }  
-# inp = np.random.randint(0,1000,
-#                         config['batch_size']*config['max_len']
-#                         ).reshape((-1,config['max_len']))
-# tar = np.random.randint(0,200,
-#                         config['batch_size']*config['tar_max_len']
-#                         ).reshape((-1,config['tar_max_len']))    
-
 
 
 

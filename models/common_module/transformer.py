@@ -133,7 +133,8 @@ class attention_block(tf.keras.layers.Layer):
 #         return hidden_state
     
 class transformer(tf.keras.layers.Layer):
-    """docstring for transformer
+    """
+    docstring for transformer
     采用sin cos 位置编码
     """
     def __init__(self, config):
