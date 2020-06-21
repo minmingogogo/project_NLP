@@ -68,7 +68,7 @@ _eg: P: 广东省 ，p :广东 ；S ：大沥镇， s :大沥_
              'zsK':'缺失 + 简称',             
              'KSCZNpNczN':'乱序 + 缺失 + 重复 +噪声 ',        
              }  
-#### 效果对比  
+### 效果对比  
 > 训练策略: 'PCZSVNK'   
 > 测试策略：'PCZSVK CPZSVK SVKPCZ CZSVK ZSVK pcZSVK pczsK CZPCZSVK PCZpczSVK CPZSVKN NCZSVNKN zsK KSCZNpNczN'  
 
