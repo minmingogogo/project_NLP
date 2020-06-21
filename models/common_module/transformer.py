@@ -26,8 +26,8 @@ def split_heads(x,n_head):
 
 def positional_encoding(config):
     position_enc = np.array([
-        [pos / np.power(10000, 2 * i / config.embed) for i in range(config.embed)]
-        if pos != 0 else np.zeros(config.embed) for pos in range(config.max_length)])
+        [pos / np.power(10000, 2 * i / config['embed_size']) for i in range(config['embed_size'])]
+        if pos != 0 else np.zeros(config['embed_size']) for pos in range(config['max_len'])])
     # type 1 时刻 min max mean,(80, 256)
     # ____________________________
     position_enc[1:, 0::2] = np.sin(position_enc[1:, 0::2])  # dim 2i
@@ -49,18 +49,18 @@ def positional_encoding(config):
 class attention(tf.keras.layers.Layer):
     def __init__(self, config):
         super(attention, self).__init__()
-        self.conv1 = Conv1D(filters = 3 * config.embed,kernel_size=1)
-        self.conv2 = Conv1D(filters = config.embed,kernel_size=1)
-        self.dropout = Dropout(config.a_dropout)
-        self.head = config.head
-        self.n_state = config.embed
+        self.conv1 = Conv1D(filters = 3 * config['embed_size'],kernel_size=1)
+        self.conv2 = Conv1D(filters = config['embed_size'],kernel_size=1)
+        self.dropout = Dropout(config['attention_dropout'])
+        self.head = config['head']
+        self.n_state = config['embed_size']
     def call(self,x, scale_att=False,training=1):
         self.training = training
         x = self.conv1(x)
         q, k, v = tf.split(x, 3, axis=2)
         # 
         #   这里报错是应为头数量不能平均分
-        # print('config.embed % config.head :{} 该数量不为0 则报错')
+        # print('config['embed_size'] % config.head :{} 该数量不为0 则报错')
         assert self.n_state % self.head == 0
         q = split_heads(q, self.head)
         k = split_heads(k, self.head)
@@ -84,9 +84,9 @@ class FFN(tf.keras.layers.Layer):
     """docstring for FFN"""
     def __init__(self, config):
         super(FFN, self).__init__()
-        self.conv1 = Conv1D(filters=config.ffw_rate*config.embed,kernel_size=1)
-        self.conv2 = Conv1D(filters=config.embed,kernel_size=1)
-        self.dropout = Dropout(config.a_dropout)
+        self.conv1 = Conv1D(filters=config['ffw_rate']*config['embed_size'],kernel_size=1)
+        self.conv2 = Conv1D(filters=config['embed_size'],kernel_size=1)
+        self.dropout = Dropout(config['attention_dropout'])
     def call(self,x,training):
         self.training = training
         ffn0 = self.conv1(x)
@@ -99,7 +99,7 @@ class attention_block(tf.keras.layers.Layer):
     def __init__(self, config):
         super(attention_block, self).__init__()
         self.attention = attention(config)
-        self.ln = LayerNormalization(epsilon=config.layer_norm_epsilon)
+        self.ln = LayerNormalization(epsilon=config['layer_norm_epsilon'])
         self.ffn = FFN(config)
     def call(self,x, scale_att=False,training=True):
         a = self.attention(x,scale_att=scale_att,training = training)
@@ -118,8 +118,8 @@ class attention_block(tf.keras.layers.Layer):
 #     def __init__(self, config):
 #         super(transformer, self).__init__()
 #         self.config = config
-#         self.wde = Embedding(config.vocab_size, config.embed)
-#         self.pte = Embedding(config.max_length, config.embed)
+#         self.wde = Embedding(config.vocab_size, config['embed_size'])
+#         self.pte = Embedding(config['max_len'], config['embed_size'])
 #         self.attention_blocks = [attention_block(config) for i in range(self.config.n_layer)]
 #         self.ln = LayerNormalization(epsilon=self.config.layer_norm_epsilon)
 #     def call(self,input_ids,training):
@@ -140,10 +140,15 @@ class transformer(tf.keras.layers.Layer):
     def __init__(self, config):
         super(transformer, self).__init__()
         self.config = config
-        self.wde = Embedding(config.vocab_size, config.embed)
-        self.pte = Embedding(config.max_length, config.embed)
-        self.attention_blocks = [attention_block(config) for i in range(self.config.n_layer)]
-        self.ln = LayerNormalization(epsilon=self.config.layer_norm_epsilon)
+        self.wde = Embedding(config['vocab_size'],
+                            config['embed_size'])
+        
+        # 数字位置编码
+        
+        self.pte = Embedding(config['max_len'], config['embed_size'])
+      
+        self.attention_blocks = [attention_block(config) for i in range(self.config['num_layers'])]
+        self.ln = LayerNormalization(epsilon=self.config['layer_norm_epsilon'])
     def call(self,input_ids,training):
         seq_embedding = self.wde(input_ids)
         batch,seq_len,emb = shape_list(seq_embedding)
@@ -152,13 +157,35 @@ class transformer(tf.keras.layers.Layer):
         position_embedding = positional_encoding(self.config)
         position_embedding = tf.cast(position_embedding,dtype=seq_embedding.dtype)
         hidden_state = self.ln(seq_embedding + position_embedding)
-        for i in range(self.config.n_layer):
+        for i in range(self.config['num_layers']):
             hidden_state = self.attention_blocks[i](hidden_state,scale_att=True,training=training)
         return hidden_state
         
     
-# if __name__ == '__main__':
-#     tf_layer = transformer(config)
+if __name__ == '__main__':
+    config = {
+        'epoch':1000,
+        'vocab_size':3747,
+        'tgt_size':44,
+        'max_len':256,
+        'num_layers':4,
+        'head':8,
+        'embed_size':256,
+        'ffw_rate':4,
+        'attention_dropout':0.2,
+        'layer_norm_epsilon':1e-5,
+        'batch_size':16,
+        'lr':1e-4,
+        'dynamics_lr':True,
+        # rnn=True,
+        'rnn_unit':384,
+        'rnn_dropout':0.2,
+        # label_train_type='BIES',
+        # train_type='ts',
+        # reset_vocab=False,        
+        }
+    
+    tf_layer = transformer(config)
     
 #     for i in cla_batch.take(1):
 #         input_ids = i[0]
@@ -220,7 +247,7 @@ class transformer(tf.keras.layers.Layer):
 #         tar= i[1]
 
 # #   输入层    
-# wde = Embedding(config.vocab_size, config.embed)    
+# wde = Embedding(config.vocab_size, config['embed_size'])    
 # seq_embedding = wde(input_ids)    
 # # seq_embedding.shape
 # # Out[70]: TensorShape([16, 80, 256])    
@@ -233,8 +260,8 @@ class transformer(tf.keras.layers.Layer):
 #                                                   np.min(tmp[i].numpy())))   
     
 # #   数字位置编码    
-# position_ids = tf.range(0, config.max_length, dtype=tf.int32)[tf.newaxis, :]
-# pteNum_layer = Embedding(config.max_length, config.embed)    
+# position_ids = tf.range(0, config['max_len'], dtype=tf.int32)[tf.newaxis, :]
+# pteNum_layer = Embedding(config['max_len'], config['embed_size'])    
 # position_embedding = pteNum_layer(position_ids)    
 # tf.float32
 # TensorShape([1, 80, 256])    
@@ -259,8 +286,8 @@ class transformer(tf.keras.layers.Layer):
 # #   sin cos 编码   
     
 # position_enc = np.array([
-#     [pos / np.power(10000, 2 * i / config.embed) for i in range(config.embed)]
-#     if pos != 0 else np.zeros(config.embed) for pos in range(config.max_length)])
+#     [pos / np.power(10000, 2 * i / config['embed_size']) for i in range(config['embed_size'])]
+#     if pos != 0 else np.zeros(config['embed_size']) for pos in range(config['max_len'])])
 # # type 1 时刻 min max mean,(80, 256)
 # # ____________________________
 # position_enc[1:, 0::2] = np.sin(position_enc[1:, 0::2])  # dim 2i
@@ -293,6 +320,6 @@ class transformer(tf.keras.layers.Layer):
 # 8--- mean :0.042000793306546644, max:0.08823429591965566, min-0.0882340743901494 
 # 9--- mean :0.041720034164190206, max:0.0884093891447807, min-0.08810353221908088 
 
-# pteSinCos_layer = Embedding(config.max_length, config.embed,weights = [position_enc])
+# pteSinCos_layer = Embedding(config['max_len'], config['embed_size'],weights = [position_enc])
 
 

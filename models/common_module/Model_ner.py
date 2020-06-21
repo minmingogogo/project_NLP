@@ -1,10 +1,7 @@
 import tensorflow as tf
-# from .transformer import transformer
-# from .rnn import rnn_layer
-# from .crf import crf_log_likelihood,crf_decode
-from model_transformer.transformer import transformer
-from model_transformer.rnn import rnn_layer
-from model_transformer.crf import crf_log_likelihood,crf_decode
+from models.common_module.transformer import transformer
+from models.common_module.crf import crf_log_likelihood,crf_decode
+from models.common_module.CRF_Layer import CRF
 import tensorflow.keras as K
 import tensorflow.keras.layers as L
 from tensorflow.keras.models import Sequential
@@ -15,62 +12,82 @@ from tensorflow.keras.losses import categorical_crossentropy
 # loss = categorical_crossentropy(y_true, y_pred)
 
 
-
-
-
-class Forward(tf.keras.layers.Layer):
+class Forward(L.Layer):
     def __init__(self, config):
         super(Forward, self).__init__()
         init = tf.keras.initializers.GlorotUniform()
-        tgt_size = config.tgt_size
+        tgt_size = config['tgt_size']#转移概率矩阵尺寸
         self.transition_params = tf.Variable(lambda : init([tgt_size,tgt_size]))
-    def call(self,output,label_input=None,training=1):
+    def call(self,output,label_input=None):
+        ins = [output,label_input,self.transition_params]
+        loss, self.transition_params = crf_log_likelihood(ins)
+        decode_tags, best_score = crf_decode([output,self.transition_params])
+        return loss,decode_tags, best_score
+            
         
-        if training:
-            # print(1)
-            ins = [output,label_input,self.transition_params]
-            loss, self.transition_params = crf_log_likelihood(ins)
-            return loss
-        else:
-            decode_tags, _ = crf_decode([output,self.transition_params])
-            return decode_tags
-        
-        
-# def compute_loss(self, predictions, labels, num_class=2, ignore_index=None):
-#     if ignore_index is None:
-#         loss_func = CrossEntropyLoss()
-#     else:
-#         loss_func = CrossEntropyLoss(ignore_index=ignore_index)
-#     return loss_func(predictions.view(-1, num_class), labels.view(-1))
-
-
-#         self.next_loss_func = CrossEntropyLoss()
-#         self.mlm_loss_func = CrossEntropyLoss(ignore_index=0)
-
-#     def compute_loss(self, predictions, labels, num_class=2, ignore_index=-100):
-#         loss_func = CrossEntropyLoss(ignore_index=ignore_index)
-#         return loss_func(predictions.view(-1, num_class), labels.view(-1))
-
-        
-class ner_model(tf.keras.Model):
+class ner_model(K.Model):
     """docstring for ner_model"""
     def __init__(self, config):
         super(ner_model, self).__init__()
         self.config = config
-        # self.training = training
         self.tf_layer = transformer(config)
-        self.rnn_layer = rnn_layer(config)
-        self.dense_layer = tf.keras.layers.Dense(config.tgt_size)
+        # self.rnn_layer = rnn_layer(config)
+        
+        self.bi_lstm = L.Bidirectional(L.LSTM(config['rnn_unit'], 
+                                    return_sequences=True,
+                                    return_state=False))        
+        self.dropout = L.Dropout(config['rnn_dropout'])  
+
+        self.dense_layer = L.Dense(config['tgt_size'])
         self.ffw = Forward(config)
-    def call(self,seq_input,label_input=None,training=1):
+        
+        
+    def call(self,seq_input,label_input=None,training=1,detail=False):
         output = self.tf_layer(seq_input,training)
-        if self.config.rnn:
-            output = self.rnn_layer.bi_rnn(output,training)
+        # output.shape (B,M,U)
+        
+        if self.config['rnn']:
+            ''' 是否增加 bi-lstm block'''
+            output = self.bi_lstm(output)
+            if training:
+                output = self.dropout(output)
         output = self.dense_layer(output)
+        loss,decode_tags,best_score = self.ffw(output, label_input)
+        
         if training:
-            return self.ffw(output, label_input,training)
+            if  detail:
+                return loss,decode_tags,best_score
+            else:
+                ''' return loss 不能用model.fit 只能手动 train'''
+                return loss                
         else:
-            return self.ffw(output,training)
+            return decode_tags
+  
+
+            
+    # for index,batch in enumerate(train_set):
+    #     # if index>1:
+    #     #     break
+    #     input_ids,input_labels = batch        
+    #     seq_input,label_input   = input_ids,input_labels
+    #     print(index,'-----',seq_input.shape,'-----',label_input.shape)
+    #     tmp = ner(seq_input,label_input,training=1,detail = 1)
+    #     print(tmp)
+        
+    #     output = ner.tf_layer(seq_input,training=1)
+    #     output.shape
+        
+        
+    #     if ner.config['rnn']:
+    #         ''' 是否增加 bi-lstm block'''
+    #         output = ner.bi_lstm(output)
+            
+    #         tmp = bilstm1(output)
+            
+    #         if training:
+    #             output = ner.dropout(output)
+    #     output = ner.dense_layer(output)
+    #     loss,decode_tags,best_score = ner.ffw(output, label_input)
         
 class Classify_model(tf.keras.Model):
     """docstring for classify_model"""
@@ -80,9 +97,9 @@ class Classify_model(tf.keras.Model):
         # self.training = training
         self.tf_layer = transformer(config)
         self.maxpooling_layer = L.GlobalAveragePooling1D()
-        self.dense_layer = L.Dense(config.num_classes,activation = 'relu')
+        self.dense_layer = L.Dense(config['num_classes'],activation = 'relu')
         # self.ffw = Forward(config)
-        self.softmax_layer = L.Dense(config.num_classes,activation = 'softmax')
+        self.softmax_layer = L.Dense(config['num_classes'],activation = 'softmax')
     def call(self,seq_input,label_input=None,training=1):
         output = self.tf_layer(seq_input,training)
         output = self.maxpooling_layer(output)
@@ -97,7 +114,34 @@ class Classify_model(tf.keras.Model):
         
         
         
-# if __name__ == '__main__':
+if __name__ == '__main__':
+    config = {
+        'epoch':1000,
+        'vocab_size':3747,
+        'tgt_size':44,
+        'max_len':256,
+        'num_layers':4,
+        'head':8,
+        'embed_size':256,
+        'ffw_rate':4,
+        'attention_dropout':0.2,
+        'layer_norm_epsilon':1e-5,
+        'batch_size':16,
+        'lr':1e-4,
+        'dynamics_lr':True,
+        'rnn':True,
+        'rnn_unit':384,
+        'rnn_dropout':0.2,
+        # label_train_type='BIES',
+        # train_type='ts',
+        # reset_vocab=False,        
+        }    
+    
+    
+    
+    
+    
+    
 # #     config = nerConfig()
     
 #     cla_model2 = Classify_model(config)
