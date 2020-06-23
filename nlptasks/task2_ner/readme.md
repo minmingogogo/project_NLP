@@ -72,12 +72,12 @@ _eg: P: 广东省 ，p :广东 ；S ：大沥镇， s :大沥_
 > 训练策略: 'PCZSVNK'   
 > 测试策略：'PCZSVK CPZSVK SVKPCZ CZSVK ZSVK pcZSVK pczsK CZPCZSVK PCZpczSVK CPZSVKN NCZSVNKN zsK KSCZNpNczN'  
 
-**训练速度比较**  
+**训练情况**  
 bert+crf 模型最快到达最优  
 
 ![train](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/compare_models_trainprocess.png)
 
-
+![trainm_etrics](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics.png)
 
 **模型健壮性比较**  
 仅训练 5000条 'PCZSVNK'策略数据,在13种测试策略上验证效果，比较模型的健壮性。   
