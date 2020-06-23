@@ -89,7 +89,7 @@ bert+crf 模型最快到达最优
 ![train](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics.png)    
 
 验证集 SVKPCZ      
-![evaluate](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics.png)  
+![evaluate](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics_SVKPCZ.png)  
 
 
 
