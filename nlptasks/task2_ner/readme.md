@@ -72,21 +72,26 @@ _eg: P: 广东省 ，p :广东 ；S ：大沥镇， s :大沥_
 > 训练策略: 'PCZSVNK'   
 > 测试策略：'PCZSVK CPZSVK SVKPCZ CZSVK ZSVK pcZSVK pczsK CZPCZSVK PCZpczSVK CPZSVKN NCZSVNKN zsK KSCZNpNczN'  
 
-**训练情况**  
+#### 标记label 效果评估
 bert+crf 模型最快到达最优  
-
 ![train](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/compare_models_trainprocess.png)
 
-![trainm_etrics](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics.png)
-
-**模型健壮性比较**  
+**模型健壮性评估**  
 仅训练 5000条 'PCZSVNK'策略数据,在13种测试策略上验证效果，比较模型的健壮性。   
 > 在 bio 标注模式下，bert+crf 略微优于 bi-lstm+crf 表现   
 > 在 bieo 标注模式下，bert+crf 在13种干扰场景下，11种准确率在 0.79以上，其中6种在0.9以上  
 
 ![evaluate](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/compare_models.png)
 
-**训练/预测场景下分类f1 score**  
+**Macro Micro metrics**  
+训练集 PCZSVNK
+![train](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics.png)    
+验证集 SVKPCZ    
+![evaluate](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics.png)  
+
+
+
+#### 实体entity 效果评估  
 
 训练场景：PCZSVNK 2000条非模型数据实体提取效果：  
 ![train_patt](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/%E5%88%86%E7%B1%BB%E5%87%86%E7%A1%AE%E7%8E%872.png)
