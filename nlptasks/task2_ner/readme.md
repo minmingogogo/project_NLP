@@ -13,7 +13,7 @@
 > 点线面范围细分 ：org: 建筑（公司/商铺/等）、road:路（路/街/巷/等）、park:园区（工业园/农场/等）  
 
 #### 1 模型架构  
-> **Bert+CRF**  
+**Bert+CRF**  
 >> transformer_block    
 >>> word_embedding  
 >>> position_embedding  
@@ -24,7 +24,7 @@
 >> crf_layer  
 
 
-> **bi-LSTM+CRF**  
+**bi-LSTM+CRF**  
 >> word_embedding  
 >> bilstm1
 >> bilstm2
@@ -84,9 +84,11 @@ bert+crf 模型最快到达最优
 ![evaluate](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/compare_models.png)
 
 **Macro Micro metrics**  
-训练集 PCZSVNK
+
+训练集 PCZSVNK    
 ![train](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics.png)    
-验证集 SVKPCZ    
+
+验证集 SVKPCZ      
 ![evaluate](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task2_ner/imgs/macro_micro_metrics.png)  
 
 
@@ -151,7 +153,7 @@ bert+crf 模型最快到达最优
     {'road': {'江西路与合作化路交叉口': array([ 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19])}, 'str': {'街道': array([2, 3])}, 'vil': {'丁香社区': array([4, 5, 6, 7])}, 'pro': {'南七': array([0, 1])}, 'org': {'幸福里小区21栋安徽省合肥市蜀山区': array([20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36])}}
 
 
-> 从以上训练预测效果对比可以获得以下信息    
+从以上训练预测效果对比可以获得以下信息    
 1. 带有后缀词训练的模型用于简称场景验证时，行政级别判断不准确：    
    true : 'zon': {'蜀山': array([0, 1]) ; pred :{'cit': {'蜀山': array([0, 1])}    
 2. 镇、村级别缺少后缀词难以识别：  （str 代表四级行政区划  镇；vil 代表五级 村/社区  
