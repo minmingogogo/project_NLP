@@ -1,5 +1,5 @@
-"# project_NLP" 
-总结一些tf2 keras框架下实现的自然语言任务,具体包括如下：  
+
+总结一些tf2 keras框架下实现的自然语言任务,及keras自定义操作
 
  1. nlp 任务， 已上传：  
    [task_2 实体识别](https://github.com/minmingogogo/project_NLP/tree/master/nlptasks/task2_ner)  
@@ -29,7 +29,6 @@
       打印自定义metrics    
       基于自定义best_acc保存模型   
       
-   
-
+     
 
 ## 
