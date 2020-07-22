@@ -47,14 +47,12 @@
 		al_SGD_1e-4
 		al_SGD_1e-3
 
-###	3.测试结果  
-**fine-tune 方案选择优化器就可以了，叠加其他策略未必会更好。**  
+###	3.测试结果    
+3.1 预训练模型一般在前1-2个epoch 就可以达到最优，此时优化器省显存优先如SGD（资源充足可以忽略）  
+3.2 fine-tune 方案选择优化器就可以了，叠加其他策略未必会更好。  
 在这个二分类任务中，模型表现各种优化器的表现，训练过程albert_small sgd 1e-3最快收敛，其次是Adam 1e-4.   
 测试集表现  AdamWD最快达到最优，SGD次之。 考虑显存占用的话，SGD无疑是比Adam更好的选择。   
 见下图
-
-###	4.测试结论
-如果预训练模型一般在前1-2个epoch 就可以达到最优，此时优化器用简单的省显存的
 
 ####	train accuracy  
 ![train](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task3_classify/img/trainacc.png)
@@ -65,7 +63,7 @@
 ####	loss
 ![loss](https://github.com/minmingogogo/project_NLP/blob/master/nlptasks/task3_classify/img/loss.png)
 
-###	5.改进与优化
+###	4.改进与优化
 	
 通过分析预测错误数据发现，有部分是标记错误或者正负情绪皆有的。  
 而模型真正错误的几乎是在后半句转折上。相应的改正策略如下：    
