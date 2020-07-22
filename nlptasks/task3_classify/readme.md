@@ -81,6 +81,6 @@
 自训练模型时候叠加优化策略可能有提升帮助，在下一个任务中比较  
 ----  
 阅读材料
-玩转Keras之小众需求：自定义优化器(https://zhuanlan.zhihu.com/p/44448328)  
+[玩转Keras之小众需求：自定义优化器](https://zhuanlan.zhihu.com/p/44448328)  
 
 
